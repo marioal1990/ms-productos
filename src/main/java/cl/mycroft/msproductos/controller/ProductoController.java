@@ -1,47 +1,53 @@
 package cl.mycroft.msproductos.controller;
 
 import cl.mycroft.msproductos.bean.rest.ControllerResponse;
-import cl.mycroft.msproductos.model.entity.Producto;
+import cl.mycroft.msproductos.bean.rest.PageResponse;
+import cl.mycroft.msproductos.model.dto.ProductoDTO;
 import cl.mycroft.msproductos.service.ProductoService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import tools.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
-@Controller
-@CrossOrigin
+@RestController
 @Slf4j
 @RequestMapping("/api/v1/producto")
+@RequiredArgsConstructor
 public class ProductoController {
 
     private final ProductoService productoService;
 
-    @Autowired
-    public ProductoController(ProductoService productoService) {
-        this.productoService = productoService;
+    @GetMapping(value = "/productos", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ControllerResponse<PageResponse<ProductoDTO>>> getProductos(
+            @PageableDefault(size = 20, sort = "sku") Pageable pageable) {
+        log.debug("GET productos");
+        try {
+            PageResponse<ProductoDTO> page = PageResponse.of(this.productoService.getList(pageable));
+            return ResponseEntity.ok(new ControllerResponse<>(HttpStatus.OK.value(), "OK", page));
+        } catch (Exception e) {
+            return error(e);
+        }
     }
 
-    @GetMapping(value = "/productos", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ControllerResponse> getProductos() {
-        log.info("GET productos");
-        ControllerResponse controllerResponse;
+    @GetMapping(value = "/productosByMinPrecio", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ControllerResponse<PageResponse<ProductoDTO>>> getProductosByMinPrecio(
+            @RequestParam(defaultValue = "0")  Double minPrecio,
+            @PageableDefault(sort = "sku", direction = Sort.Direction.DESC) Pageable pageable) {
+        log.debug("GET productos by minPrecio");
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<Producto> lista = this.productoService.getList();
-            String response = objectMapper.writeValueAsString(lista);
-            controllerResponse = new ControllerResponse(HttpStatus.OK.value(), response);
+            PageResponse<ProductoDTO> page = PageResponse.of(this.productoService.findByMinPrecio(minPrecio, pageable));
+            return ResponseEntity.ok(new ControllerResponse<>(HttpStatus.OK.value(), "OK", page));
         } catch (Exception e) {
-            controllerResponse = new ControllerResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+            return error(e);
         }
-        return new ResponseEntity<>(controllerResponse, HttpStatus.valueOf(controllerResponse.code()));
     }
 
     @GetMapping("/status")
@@ -49,5 +55,11 @@ public class ProductoController {
         String value = "ProductoController " + "productos.mapping" + "is OK";
         log.info(value);
         return value;
+    }
+
+    private static <T> ResponseEntity<ControllerResponse<T>> error(Exception e) {
+        log.error("Error en ProductoController", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ControllerResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), null));
     }
 }

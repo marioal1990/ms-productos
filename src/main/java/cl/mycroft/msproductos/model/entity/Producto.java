@@ -9,7 +9,8 @@ import lombok.Setter;
 import java.io.Serial;
 import java.io.Serializable;
 
-@Entity(name = "lab_producto")
+@Entity
+@Table(name = "lab_producto")
 @Getter
 @Setter
 @NoArgsConstructor

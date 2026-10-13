@@ -1,18 +1,23 @@
 package cl.mycroft.msproductos.service;
 
+import cl.mycroft.msproductos.model.dto.ProductoDTO;
 import cl.mycroft.msproductos.model.entity.Producto;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface ProductoService {
 
     @Transactional(readOnly = true)
-    List<Producto> getList();
+    Slice<ProductoDTO> getList(Pageable pageable);
 
     @Transactional(readOnly = true)
     Optional<Producto> getById(String id);
+
+    @Transactional(readOnly = true)
+    Slice<ProductoDTO> findByMinPrecio(Double minPrecio, Pageable pageable);
 
     @Transactional(readOnly = true)
     Optional<Producto> getByFilter(String filter);

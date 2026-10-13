@@ -25,7 +25,9 @@ BEGIN
             pro_sku    VARCHAR(100) NOT NULL COMMENT 'Sku del producto',
             pro_nombre VARCHAR(255) NOT NULL COMMENT 'Nombre del producto',
             pro_stock  INT          NOT NULL COMMENT 'Stock del Producto',
-            pro_precio DOUBLE       NOT NULL COMMENT 'Precio del Producto'
+            pro_precio DOUBLE       NOT NULL COMMENT 'Precio del Producto',
+            UNIQUE INDEX ux_producto_sku (pro_sku),
+            INDEX ix_producto_precio (pro_precio)
         );
 
         -- Poblar tabla

@@ -1,4 +1,4 @@
 package cl.mycroft.msproductos.bean.rest;
 
-public record ControllerResponse(int code, String message) {
+public record ControllerResponse<T>(int code, String message, T data) {
 }
